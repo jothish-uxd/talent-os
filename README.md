@@ -1,8 +1,12 @@
 # Talent OS
 
-A prototype of an internal hiring system (ATS) for recruiters and hiring managers, built on [Enterprise Library](https://jothish-uxd.github.io/enterprise-library/): Geist, monochrome ink on white, and the app shown inside its own browser frame.
+A prototype of a full CRM for talent: one lasting record per person, from sourcing and outreach through assessments, interviews and hire. Built on [Enterprise Library](https://jothish-uxd.github.io/enterprise-library/): Geist, monochrome ink on white, and the app shown inside its own browser frame.
 
 It started as a copy of the Hiring system tab from [Online Assessments](https://github.com/jothish-uxd/online-assessments).
+
+## Overview
+
+What Talent OS is, who uses it, and what's built so far.
 
 ## Hiring system
 

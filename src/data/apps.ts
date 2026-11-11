@@ -24,7 +24,7 @@ export const APPS: AppInfo[] = [
     name: 'Hiring system',
     host: 'hire.talentos.app',
     audience: 'Recruiters and hiring managers',
-    summary: 'Where recruiters send assessments to candidates and read their results.',
+    summary: 'Where recruiters run jobs, pools and pipelines, send assessments and read results.',
     status: 'in-progress',
   },
 ];

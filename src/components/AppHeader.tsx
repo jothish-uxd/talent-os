@@ -7,11 +7,12 @@ export default function AppHeader() {
 
   return (
     <header className="site-header">
-      <Link to="/hiring-system" className="wordmark-link" aria-label="Talent OS home"><Logo /></Link>
+      <Link to="/overview" className="wordmark-link" aria-label="Talent OS overview"><Logo /></Link>
       <span className="header-sep" aria-hidden="true">/</span>
       <span className="badge">v0.1 preview</span>
 
       <nav className="header-tabs" aria-label="Primary">
+        <NavLink to="/overview" className="header-tab">Overview</NavLink>
         <NavLink to="/hiring-system" className="header-tab">Hiring system</NavLink>
       </nav>
 
