@@ -6,6 +6,10 @@ export interface MenuItem {
   disabled?: boolean;
   /** Draw a rule above this item */
   divider?: boolean;
+  /** Makes this a radio item (one of a set); true marks the current choice */
+  checked?: boolean;
+  /** Smaller second line under the label */
+  hint?: string;
 }
 
 interface Props {
@@ -96,17 +100,24 @@ export default function Menu({ label, items, children, className = '', align = '
           {items.map((it, i) => (
             <li
               key={it.label}
-              role="menuitem"
+              role={it.checked === undefined ? 'menuitem' : 'menuitemradio'}
+              aria-checked={it.checked}
               data-i={i}
               tabIndex={i === active ? 0 : -1}
               aria-disabled={it.disabled || undefined}
-              className={`menu__item${it.divider ? ' has-divider' : ''}`}
+              className={`menu__item${it.divider ? ' has-divider' : ''}${it.checked !== undefined ? ' menu__item--radio' : ''}`}
               onClick={() => { if (!it.disabled) { close(); it.onSelect(); } }}
               onKeyDown={(e) => {
                 if ((e.key === 'Enter' || e.key === ' ') && !it.disabled) { e.preventDefault(); close(); it.onSelect(); }
               }}
             >
-              {it.label}
+              {it.checked !== undefined && (
+                <svg className="menu__check" viewBox="0 0 16 16" aria-hidden="true"><path d="m3.5 8.5 3 3 6-7" /></svg>
+              )}
+              <span className="menu__text">
+                {it.label}
+                {it.hint && <span className="menu__hint">{it.hint}</span>}
+              </span>
             </li>
           ))}
         </ul>

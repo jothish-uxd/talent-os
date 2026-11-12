@@ -338,3 +338,12 @@
 /* Locked graphs keep the same controls, shown as unavailable */
 .slot__add[aria-disabled="true"] { cursor: not-allowed; border-style: dashed; border-color: var(--rule-strong); color: var(--ink-faint); background: var(--bg); }
 .slot__add[aria-disabled="true"]:hover { background: var(--bg); border-color: var(--ink-faint); color: var(--ink-soft); }
+.menu__item--radio { display: flex; align-items: flex-start; gap: 8px; padding-left: 8px; }
+.menu__check { flex: none; width: 16px; height: 16px; margin-top: 2px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; visibility: hidden; }
+.menu__item[aria-checked="true"] .menu__check { visibility: visible; }
+.menu__item[aria-checked="true"] { font-weight: 600; }
+.menu__text { display: grid; gap: 1px; }
+.menu__hint { font-size: 12px; font-weight: 400; color: var(--ink-soft); }
+.me-menu .menu__button { display: inline-flex; align-items: center; gap: 8px; width: auto; padding: 0 2px 0 8px; border-radius: 999px; }
+.me-menu__role { font-size: 12.5px; font-weight: 500; color: var(--ink-soft); white-space: nowrap; }
+@media (max-width: 640px) { .me-menu__role { display: none; } .me-menu .menu__button { padding: 0; } }

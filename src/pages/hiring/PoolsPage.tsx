@@ -2,7 +2,7 @@ import { useEffect, useId, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Select } from '@jothish-uxd/enterprise-library';
 import Dialog from '../../components/content/Dialog';
-import { person, useMe } from '../../data/content/people';
+import { person, useMe } from '../../data/hiring/people';
 import { SUGGESTED, createPool, usePools, type Pool } from '../../data/hiring/pools';
 
 const day = (iso: string) => new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(`${iso}T12:00:00`));

@@ -1,9 +1,10 @@
 import { ResetButton } from '@jothish-uxd/enterprise-library';
 import Menu from './content/Menu';
-import { PEOPLE, person, setMe, useMe } from '../data/content/people';
+import { PEOPLE, person, setMe, useMe } from '../data/hiring/people';
 
 /**
- * Right end of an app's browser bar: reset, help and the signed-in person.
+ * Right end of an app's browser bar: reset, help, and whose view this is.
+ * The avatar menu switches between the recruiter and the hiring manager.
  * Help items are placeholders until each app has real help content.
  */
 export default function AppBarEnd({ what, description, to, onReset, onSoon }: {
@@ -22,9 +23,15 @@ export default function AppBarEnd({ what, description, to, onReset, onSoon }: {
       ]}>
         <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" /><path d="M6.2 6.2a1.9 1.9 0 0 1 3.6.8c0 1.3-1.8 1.6-1.8 2.7M8 11.6v.1" /></svg>
       </Menu>
-      <Menu label={`Signed in as ${me.name}, ${me.role}. Switch person`} className="menu--avatar" items={
-        Object.values(PEOPLE).filter((p) => p.id !== me.id).map((p) => ({ label: `Switch to ${p.name} · ${p.role}`, onSelect: () => setMe(p.id) }))
+      <Menu label={`Viewing as ${me.name}, ${me.role}. Switch view`} className="menu--avatar me-menu" items={
+        Object.values(PEOPLE).map((p) => ({
+          label: `${p.name} · ${p.role}`,
+          hint: p.team,
+          checked: p.id === me.id,
+          onSelect: () => { if (p.id !== me.id) { setMe(p.id); onSoon(`Now viewing as ${p.name}, ${p.role.toLowerCase()}.`); } },
+        }))
       }>
+        <span className="me-menu__role" aria-hidden="true">{me.role}</span>
         <span className="avatar avatar--sm" aria-hidden="true">{me.initials}</span>
       </Menu>
     </>

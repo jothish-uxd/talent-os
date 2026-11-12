@@ -4,7 +4,7 @@ import Dialog from '../../components/content/Dialog';
 import Menu from '../../components/content/Menu';
 import { Select } from '@jothish-uxd/enterprise-library';
 import { usePageTitle } from '../../components/usePageTitle';
-import { person, useMe } from '../../data/content/people';
+import { person, useMe } from '../../data/hiring/people';
 import PoolsPage from './PoolsPage';
 import { OPEN_JOBS, addToJob, inviteToApply, sendMessage, sendOa, useTalent, type Talent } from '../../data/hiring/talent';
 
