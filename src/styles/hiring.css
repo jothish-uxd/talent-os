@@ -82,10 +82,6 @@
 .tal-tabs { margin: 8px 0 20px; border-bottom: 1px solid var(--rule); }
 .tal-intro { margin: 0 0 14px; font-size: 14px; color: var(--ink-soft); }
 .tal-empty { max-width: 760px; border-top: 0; padding-top: 8px; }
-.tal-pooltypes { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin: 20px 0 0; }
-.tal-pooltypes > div { padding: 14px 16px; border: 1px dashed var(--rule-strong); border-radius: 10px; }
-.tal-pooltypes dt { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
-.tal-pooltypes dd { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--ink-soft); }
 
 /* ---------- Jobs ---------- */
 .job-status { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 500; white-space: nowrap; }
@@ -120,3 +116,25 @@
 .job-pager { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-top: 12px; font-size: 13px; color: var(--ink-soft); }
 
 .job-pipe { margin: 8px 0 28px; }
+
+/* ---------- Talent › Pool ---------- */
+.pool-stats { margin-bottom: 36px; }
+.pool-stat__sub { margin: 2px 0 0; font-size: 12.5px; color: var(--ink-faint); }
+.pool-block + .pool-block { margin-top: 48px; }
+.pool-block .section-head { margin-bottom: 8px; }
+.pool-n { margin-left: 6px; font-size: 13px; font-weight: 500; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
+.pool-note { margin: 0 0 14px; max-width: 72ch; font-size: 13.5px; color: var(--ink-soft); }
+.pool-table th[scope="row"] { min-width: 260px; max-width: 380px; }
+.pool-name { display: block; font-size: 14.5px; font-weight: 600; }
+.pool-kind { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-top: 6px; }
+.pool-tag { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+.pool-tag > span { width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid var(--ink); }
+.pool-tag--hand > span { background: var(--ink); }
+.pool-tag--rule > span { border-style: dashed; }
+.pool-rule { font-family: var(--mono); font-size: 11.5px; font-weight: 400; color: var(--ink-soft); }
+.pool-none { padding: 28px 16px; text-align: center; color: var(--ink-soft); }
+.field__error { margin: 4px 0 0; font-size: 13px; font-weight: 600; }
+.field__opt { font-weight: 400; color: var(--ink-faint); }
+.pool-stats { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+.pool-table td:nth-child(2) { min-width: 180px; }
+@media (max-width: 600px) { .pool-table th[scope="row"] { min-width: 220px; } }

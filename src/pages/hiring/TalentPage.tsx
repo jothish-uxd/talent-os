@@ -5,6 +5,7 @@ import Menu from '../../components/content/Menu';
 import { Select } from '@jothish-uxd/enterprise-library';
 import { usePageTitle } from '../../components/usePageTitle';
 import { person, useMe } from '../../data/content/people';
+import PoolsPage from './PoolsPage';
 import { OPEN_JOBS, addToJob, inviteToApply, sendMessage, sendOa, useTalent, type Talent } from '../../data/hiring/talent';
 
 const BASE = '/hiring-system';
@@ -32,34 +33,11 @@ export default function TalentPage() {
       </nav>
       <Routes>
         <Route index element={<Navigate to="pool" replace />} />
-        <Route path="pool" element={<Pools />} />
+        <Route path="pool" element={<PoolsPage />} />
         <Route path="prospects" element={<Prospects />} />
         <Route path="*" element={<Navigate to="pool" replace />} />
       </Routes>
     </div>
-  );
-}
-
-/** Pools: buckets of talent. Empty for now; a table of pools comes later. */
-function Pools() {
-  return (
-    <section className="tal-section" aria-labelledby="tal-pools-h">
-      <h2 id="tal-pools-h" className="visually-hidden">Pool</h2>
-      <div className="empty tal-empty">
-        <p className="empty__title">No pools yet</p>
-        <p>Pools are buckets of talent. They’ll be listed here in a table, with how many people are in each.</p>
-        <dl className="tal-pooltypes">
-          <div>
-            <dt>Your pools</dt>
-            <dd>Any grouping that helps you, not tied to a role, level, location or title. For example: “Former Rebel Alliance pilots”, “Strong OA results, not yet interviewed”, or “Ask again in spring”.</dd>
-          </div>
-          <div>
-            <dt>Suggested by the system</dt>
-            <dd>One pool per job we’re actively hiring for, kept up to date automatically with people who qualify and aren’t already hired or interviewing. For example: Starfighter Pilot L4, Flight Instructor L5, Hangar Mechanic L3, Intelligence Analyst L5, Squadron Leader L6.</dd>
-          </div>
-        </dl>
-      </div>
-    </section>
   );
 }
 
