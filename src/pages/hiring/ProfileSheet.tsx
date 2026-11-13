@@ -138,6 +138,7 @@ export default function ProfileSheet({ t, said, pager, onClose, onAction }: { t:
                 <li>Prefers {t.preferredContact.toLowerCase()}</li>
               </ul>
             </div>
+            <div className="sheet__side">
             <div className="sheet__top">
               <div className="sheet__pager" role="group" aria-label="Move between prospects">
               <button type="button" className="sheet__step" aria-label={pager.prev ? `Previous prospect: ${pager.prev}` : 'Previous prospect'} aria-disabled={!pager.prev || undefined}
@@ -154,6 +155,20 @@ export default function ProfileSheet({ t, said, pager, onClose, onAction }: { t:
                 <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" /></svg>
               </button>
             </div>
+            <div className="sheet__toolbar" role="group" aria-label={`Actions for ${t.name}`}>
+                <button type="button" className="btn btn--secondary btn--sm" onClick={() => onAction('oa')}>Send OA</button>
+                <button type="button" className="btn btn--primary btn--sm" onClick={() => onAction('invite')}>Invite to apply</button>
+                <Menu label={`More actions for ${t.name}`} className="wf-more" items={[
+                  { label: 'Add to job', onSelect: () => onAction('add') },
+                  { label: 'Add a note', disabled: true, onSelect: () => {} },
+                  { label: 'Add to talent pool', disabled: true, onSelect: () => {} },
+                  { label: 'Share profile', disabled: true, onSelect: () => {} },
+                  { label: 'Mark as do not contact', divider: true, disabled: true, onSelect: () => {} },
+                ]}>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="12" r="1.6" /><circle cx="12" cy="12" r="1.6" /><circle cx="18" cy="12" r="1.6" /></svg>
+                </Menu>
+            </div>
+            </div>
           </div>
           <dl className="sheet__facts">
             <div><dt>In process</dt><dd>{open ? `${open.title} · ${open.stage}` : 'Not right now'}</dd></div>
@@ -162,19 +177,6 @@ export default function ProfileSheet({ t, said, pager, onClose, onAction }: { t:
             <div><dt>Source</dt><dd>{t.source}</dd></div>
             <div><dt>Last activity</dt><dd>{day(t.lastActivity)}</dd></div>
           </dl>
-          <div className="sheet__toolbar" role="group" aria-label={`Actions for ${t.name}`}>
-              <button type="button" className="btn btn--secondary btn--sm" onClick={() => onAction('oa')}>Send OA</button>
-              <button type="button" className="btn btn--primary btn--sm" onClick={() => onAction('invite')}>Invite to apply</button>
-              <Menu label={`More actions for ${t.name}`} className="wf-more" items={[
-                { label: 'Add to job', onSelect: () => onAction('add') },
-                { label: 'Add a note', disabled: true, onSelect: () => {} },
-                { label: 'Add to talent pool', disabled: true, onSelect: () => {} },
-                { label: 'Share profile', disabled: true, onSelect: () => {} },
-                { label: 'Mark as do not contact', divider: true, disabled: true, onSelect: () => {} },
-              ]}>
-                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="12" r="1.6" /><circle cx="12" cy="12" r="1.6" /><circle cx="18" cy="12" r="1.6" /></svg>
-              </Menu>
-          </div>
         </header>
 
         <div className="sheet__main">
