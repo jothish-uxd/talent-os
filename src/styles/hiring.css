@@ -343,3 +343,7 @@
   .sheet__head .tal-card__headline { margin-bottom: 0; }
   .sheet__toolbar { border-top: 0; padding-top: 4px; }
 }
+/* Active reads stronger than hover, so a resting pointer never looks selected. */
+.sheet__nav--side .sheet__tab:hover { background: var(--bg-subtle); }
+.sheet__nav--side .sheet__tab[aria-current="true"],
+.sheet__nav--side .sheet__tab[aria-current="true"]:hover { background: var(--bg-hover); color: var(--ink); }

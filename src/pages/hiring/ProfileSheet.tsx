@@ -74,24 +74,36 @@ export default function ProfileSheet({ t, said, pager, onClose, onAction }: { t:
     setActive(keep);
   }, [t.id]);
 
-  // Underline the section in view.
+  // Highlight the section you're reading as you scroll: the last one whose top has
+  // passed a reading line.
   useEffect(() => {
     const root = body.current;
     if (!root) return;
-    const io = new IntersectionObserver((entries) => {
-      const seen = entries.filter((e) => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
-      // Ignore the scroll we cause ourselves when stepping to another person.
-      if (seen && Date.now() > hold.current) setActive(seen.target.getAttribute('data-section') as Section);
-    }, { root, rootMargin: '0px 0px -65% 0px' });
-    root.querySelectorAll('[data-section]').forEach((s) => io.observe(s));
-    return () => io.disconnect();
-  }, [t.id]);
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      if (Date.now() < hold.current) return; // ignore the scroll we cause when stepping or jumping
+      const secs = [...root.querySelectorAll<HTMLElement>('[data-section]')];
+      if (!secs.length) return;
+      // The line sits a third of the way down, and slides to the bottom edge over the last
+      // screenful, so short sections near the end each get their turn.
+      const h = root.clientHeight;
+      const left = root.scrollHeight - h - root.scrollTop;
+      const line = root.scrollTop + h * 0.33 + (left < h ? h * 0.67 * (1 - left / h) : 0) - 1;
+      const current = secs.filter((el) => el.offsetTop <= line).pop() ?? secs[0];
+      setActive(current.getAttribute('data-section') as Section);
+    };
+    const onScroll = () => { if (!frame) frame = requestAnimationFrame(update); };
+    root.addEventListener('scroll', onScroll, { passive: true });
+    return () => { root.removeEventListener('scroll', onScroll); cancelAnimationFrame(frame); };
+  }, [host, t.id]);
 
   const go = (s: Section) => {
     const el = body.current?.querySelector<HTMLElement>(`[data-section="${s}"]`);
     if (!el) return;
     // Scroll only the body, so the header stays fixed.
     const root = body.current!;
+    hold.current = Date.now() + 700;
     root.scrollTo({ top: el.offsetTop - 4, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
     el.querySelector<HTMLElement>('h3')?.focus({ preventScroll: true });
     setActive(s);
