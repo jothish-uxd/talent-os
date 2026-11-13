@@ -6,6 +6,7 @@ import { Select } from '@jothish-uxd/enterprise-library';
 import { usePageTitle } from '../../components/usePageTitle';
 import { person, useMe } from '../../data/hiring/people';
 import PoolsPage from './PoolsPage';
+import PoolDetail from './PoolDetail';
 import { OPEN_JOBS, addToJob, inviteToApply, sendMessage, sendOa, useTalent, type Talent } from '../../data/hiring/talent';
 
 const BASE = '/hiring-system';
@@ -34,6 +35,7 @@ export default function TalentPage() {
       <Routes>
         <Route index element={<Navigate to="pool" replace />} />
         <Route path="pool" element={<PoolsPage />} />
+        <Route path="pool/:poolId" element={<PoolDetail />} />
         <Route path="prospects" element={<Prospects />} />
         <Route path="*" element={<Navigate to="pool" replace />} />
       </Routes>

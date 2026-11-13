@@ -4,6 +4,7 @@ import { Select } from '@jothish-uxd/enterprise-library';
 import Dialog from '../../components/content/Dialog';
 import { person, useMe } from '../../data/hiring/people';
 import { SUGGESTED, createPool, usePools, type Pool } from '../../data/hiring/pools';
+import { funnel, hasMembers, useMembers } from '../../data/hiring/poolMembers';
 
 const day = (iso: string) => new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(`${iso}T12:00:00`));
 const pct = (n: number, of: number) => (of ? Math.round((n / of) * 100) : 0);
@@ -11,7 +12,9 @@ const SHARING: Pool['sharedWith'][] = ['Only me', 'Recruiting team', 'Starfighte
 
 /** Pool tab landing page: your pools and the system's suggested pools, each in a table. */
 export default function PoolsPage() {
-  const pools = usePools();
+  // The sample pool has real members, so its counts come from them.
+  const sample = funnel(useMembers('POOL-118'));
+  const pools = usePools().map((p) => (hasMembers(p.id) ? { ...p, ...sample } : p));
   const [q, setQ] = useState('');
   const [creating, setCreating] = useState(false);
   const [said, setSaid] = useState('');
@@ -72,7 +75,9 @@ export default function PoolsPage() {
               {shown.map((p) => (
                 <tr key={p.id}>
                   <th scope="row">
-                    <span className="pool-name">{p.name}</span>
+                    {hasMembers(p.id)
+                      ? <Link to={p.id} className="pool-name pool-name--link">{p.name}</Link>
+                      : <span className="pool-name">{p.name}</span>}
                     <span className="cell-sub">{p.about}</span>
                     <span className="pool-kind">
                       <PoolKind kind={p.kind} />

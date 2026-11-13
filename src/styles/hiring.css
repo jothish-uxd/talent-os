@@ -138,3 +138,50 @@
 .pool-stats { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
 .pool-table td:nth-child(2) { min-width: 180px; }
 @media (max-width: 600px) { .pool-table th[scope="row"] { min-width: 220px; } }
+
+/* ---------- Talent › Pool › one pool ---------- */
+.pool-name--link { color: var(--ink); text-decoration: underline; text-decoration-color: var(--rule-strong, var(--ink-faint)); text-underline-offset: 3px; }
+.pool-name--link:hover { text-decoration-color: currentColor; }
+.pd-back { margin: 0 0 14px; font-size: 13.5px; }
+.pd-back a { color: var(--ink-soft); text-decoration: none; }
+.pd-back a:hover { color: var(--ink); text-decoration: underline; }
+.pd-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px 24px; margin-bottom: 24px; }
+.pd-head__main { min-width: 0; max-width: 760px; }
+.pd-head__actions { display: flex; gap: 8px; align-items: flex-start; }
+.pd-title { margin: 0; font-size: 22px; font-weight: 650; letter-spacing: -0.01em; }
+.pd-title:focus { outline: none; }
+.pd-about { margin: 6px 0 14px; font-size: 14.5px; color: var(--ink-soft); }
+.pd-meta { display: flex; flex-wrap: wrap; gap: 8px 28px; margin: 0; }
+.pd-meta dt { font-size: 12px; color: var(--ink-faint); }
+.pd-meta dd { margin: 2px 0 0; font-size: 13.5px; font-weight: 500; }
+
+.pd-funnel { margin-bottom: 36px; padding: 18px 20px 20px; border: 1px solid var(--rule); border-radius: 12px; }
+.pd-stages { list-style: none; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 20px; margin: 12px 0 0; padding: 0; }
+.pd-stages li { display: grid; align-content: start; gap: 4px; min-width: 0; }
+.pd-stage__label { font-size: 12.5px; color: var(--ink-soft); }
+.pd-stage__n { font-size: 26px; font-weight: 650; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.pd-stage__bar { display: block; height: 6px; margin-top: 4px; border-radius: 3px; background: var(--bg-sunken, var(--bg-hover)); overflow: hidden; }
+.pd-stage__bar > span { display: block; height: 100%; border-radius: 3px; background: var(--ink); }
+.pd-stage__sub { font-size: 12px; color: var(--ink-faint); }
+@media (max-width: 760px) { .pd-stages { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+.pd-people .section-head { margin-bottom: 10px; }
+.pd-filters { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.pd-chip { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 11px; border: 1px solid var(--rule); border-radius: 999px; background: var(--bg); color: var(--ink); font: inherit; font-size: 13px; cursor: pointer; }
+.pd-chip:hover { background: var(--bg-hover); }
+.pd-chip[aria-pressed="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); font-weight: 600; }
+.pd-chip:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.pd-chip__n { color: var(--ink-faint); font-variant-numeric: tabular-nums; font-weight: 500; }
+.pd-search { flex: 1 1 200px; max-width: 280px; }
+.pd-search input { height: 32px; }
+
+.pd-table .pd-pick { width: 36px; padding-right: 0; }
+.pd-table tr.is-picked { background: var(--bg-hover); }
+.pd-table th[scope="row"] { min-width: 250px; }
+.pd-person { display: flex; align-items: flex-start; gap: 10px; }
+.pd-avatar { flex: none; width: 32px; height: 32px; font-size: 11.5px; }
+.pd-status { display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; font-weight: 500; }
+.pd-mark { flex: none; width: 14px; height: 14px; fill: none; stroke: var(--ink); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.pd-mark .fill { fill: var(--ink); }
+.pd-mark .knock { stroke: var(--bg); stroke-width: 1.7; }
+.pd-touch { min-width: 200px; }
