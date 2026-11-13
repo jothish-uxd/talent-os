@@ -1,4 +1,5 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import Menu from '../../components/content/Menu';
 import { person, useMe } from '../../data/hiring/people';
 import { interviewsFor, resumeFor, type Interview, type Rating } from '../../data/hiring/profile';
@@ -17,9 +18,15 @@ type ActionKind = 'add' | 'invite' | 'oa';
 /**
  * Everything about one person, in a sheet from the right. The header stays put
  * (who they are, how to reach them, what to do next); the sections scroll under it.
+ *
+ * The sheet lives inside the browser frame, not over the whole page: it's part
+ * of the Internal ATS. It's portalled into the frame's body and makes the app
+ * behind it inert, so keyboard and screen reader users stay in the sheet, while
+ * the browser bar above it keeps working like a real browser's would.
  */
 export default function ProfileSheet({ t, said, onClose, onAction }: { t: Talent; said: string; onClose: () => void; onAction: (k: ActionKind) => void }) {
-  const ref = useRef<HTMLDialogElement>(null);
+  const ref = useRef<HTMLDivElement>(null);
+  const [host, setHost] = useState<HTMLElement | null>(null);
   const body = useRef<HTMLDivElement>(null);
   const opener = useRef<Element | null>(null);
   const id = useId();
@@ -29,13 +36,24 @@ export default function ProfileSheet({ t, said, onClose, onAction }: { t: Talent
   const open = t.applications.find((a) => !CLOSED.includes(a.stage) && a.stage !== 'Hired');
   const replies = t.messages.filter((m) => m.from === 'candidate').length;
 
-  useEffect(() => {
+  // Find the browser frame's body to open inside.
+  useLayoutEffect(() => {
     opener.current = document.activeElement;
-    ref.current?.showModal();
+    setHost(opener.current?.closest<HTMLElement>('.bframe__body') ?? document.querySelector<HTMLElement>('.bframe__body') ?? document.body);
+  }, []);
+
+  // While open, the app behind the sheet is inert; on close, it comes back and focus returns.
+  useEffect(() => {
+    if (!host) return;
+    const behind = [...host.children].filter((el) => el !== ref.current?.parentElement && !el.contains(ref.current)) as HTMLElement[];
+    behind.forEach((el) => el.setAttribute('inert', ''));
     // Start on the person's name rather than the first link in the header.
     ref.current?.querySelector<HTMLElement>('.sheet__name')?.focus();
-    return () => { (opener.current as HTMLElement | null)?.focus?.(); };
-  }, []);
+    return () => {
+      behind.forEach((el) => el.removeAttribute('inert'));
+      (opener.current as HTMLElement | null)?.focus?.();
+    };
+  }, [host]);
 
   // Start at the top whenever a different person opens.
   useEffect(() => { body.current?.scrollTo({ top: 0 }); setActive('overview'); }, [t.id]);
@@ -70,10 +88,12 @@ export default function ProfileSheet({ t, said, onClose, onAction }: { t: Talent
     { s: 'messages', label: 'Messages', n: t.messages.length },
   ];
 
-  return (
-    <dialog ref={ref} className="sheet" aria-labelledby={`${id}-n`}
-      onCancel={(e) => { e.preventDefault(); onClose(); }}
-      onClick={(e) => { if (e.target === ref.current) onClose(); }}>
+  if (!host) return null;
+  return createPortal(
+    <div className="sheet-layer">
+      <div className="sheet__scrim" aria-hidden="true" onClick={onClose} />
+      <div ref={ref} className="sheet" role="dialog" aria-modal="true" aria-labelledby={`${id}-n`}
+        onKeyDown={(e) => { if (e.key === 'Escape' && !e.defaultPrevented) { e.stopPropagation(); onClose(); } }}>
       <div className="sheet__inner">
         <header className="sheet__head">
           <div className="sheet__who">
@@ -269,7 +289,9 @@ export default function ProfileSheet({ t, said, onClose, onAction }: { t: Talent
         <span className="visually-hidden" role="status">{said}</span>
         {said && <p className="tal-toast sheet__toast" aria-hidden="true">{said}</p>}
       </div>
-    </dialog>
+      </div>
+    </div>,
+    host,
   );
 }
 

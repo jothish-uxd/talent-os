@@ -194,16 +194,17 @@
 .tal-card__open:hover { text-decoration-color: currentColor; }
 .tal-card__open:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; border-radius: 3px; }
 
-/* ---------- Profile sheet ---------- */
+/* ---------- Profile sheet (inside the browser frame) ---------- */
+.sheet-layer { position: absolute; inset: 0; z-index: 20; overflow: hidden; }
+.sheet__scrim { position: absolute; inset: 0; background: rgba(10, 10, 10, .32); animation: sheet-fade .18s ease-out; }
 .sheet {
-  position: fixed; inset: 0 0 0 auto; width: min(920px, 100vw); height: 100dvh; max-width: 100vw; max-height: 100dvh;
-  margin: 0 0 0 auto; padding: 0; border: 0; border-left: 1px solid var(--rule-strong); background: var(--bg); color: var(--ink);
-  box-shadow: -24px 0 64px -24px rgba(0, 0, 0, .35);
+  position: absolute; top: 0; right: 0; bottom: 0; width: min(860px, 100%);
+  border-left: 1px solid var(--rule-strong); background: var(--bg); color: var(--ink);
+  box-shadow: -20px 0 48px -24px rgba(0, 0, 0, .35); animation: sheet-in .22s ease-out;
 }
-.sheet::backdrop { background: rgba(10, 10, 10, .42); }
-.sheet[open] { animation: sheet-in .22s ease-out; }
-@keyframes sheet-in { from { transform: translateX(40px); opacity: 0; } to { transform: none; opacity: 1; } }
-@media (prefers-reduced-motion: reduce) { .sheet[open] { animation: none; } }
+@keyframes sheet-in { from { transform: translateX(32px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes sheet-fade { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .sheet, .sheet__scrim { animation: none; } }
 .sheet__inner { position: relative; display: flex; flex-direction: column; height: 100%; }
 
 .sheet__head { flex: none; padding: 20px 28px 0; border-bottom: 1px solid var(--rule); background: var(--bg); }
@@ -284,6 +285,7 @@
 }
 .sheet .tal-oa { margin: 0; }
 .sheet { overflow: hidden; }
+.bframe__body:has(> .sheet-layer) { overflow: hidden; }
 .sheet__name:focus { outline: none; }
 .sheet__name:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; border-radius: 3px; }
 .sheet__body { position: relative; }
