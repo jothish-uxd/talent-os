@@ -1,5 +1,5 @@
 import { useEffect, useId, useState } from 'react';
-import { Navigate, NavLink, Route, Routes } from 'react-router-dom';
+import { Navigate, NavLink, Route, Routes, useSearchParams } from 'react-router-dom';
 import Dialog from '../../components/content/Dialog';
 import Menu from '../../components/content/Menu';
 import { Select } from '@jothish-uxd/enterprise-library';
@@ -7,6 +7,7 @@ import { usePageTitle } from '../../components/usePageTitle';
 import { person, useMe } from '../../data/hiring/people';
 import PoolsPage from './PoolsPage';
 import PoolDetail from './PoolDetail';
+import ProfileSheet from './ProfileSheet';
 import { OPEN_JOBS, addToJob, inviteToApply, sendMessage, sendOa, useTalent, type Talent } from '../../data/hiring/talent';
 
 const BASE = '/hiring-system';
@@ -54,11 +55,15 @@ function Prospects() {
   const ids = [...picked];
   useEffect(() => { if (!said) return; const t = setTimeout(() => setSaid(''), 5000); return () => clearTimeout(t); }, [said]);
   const toggle = (id: string, on: boolean) => setPicked((p) => { const n = new Set(p); if (on) n.add(id); else n.delete(id); return n; });
+  // The open profile lives in the URL (?person=TAL-…), so it can be shared and Back closes it.
+  const [params, setParams] = useSearchParams();
+  const viewing = talent.find((t) => t.id === params.get('person'));
+  const view = (id: string | null) => setParams(id ? { person: id } : {}, { replace: !id });
 
   return (
     <section className="tal-section" aria-labelledby="tal-pros-h">
       <h2 id="tal-pros-h" className="visually-hidden">Prospects</h2>
-      <p className="tal-intro">People you’ve sourced or who’ve shown interest. Select people to act on several at once.</p>
+      <p className="tal-intro">People you’ve sourced or who’ve shown interest. Open someone to see their full profile, or select people to act on several at once.</p>
       <div className="tal-bulk" role="toolbar" aria-label="Selected people">
         <label className="check">
           <input type="checkbox" checked={all} ref={(el) => { if (el) el.indeterminate = some; }}
@@ -78,10 +83,11 @@ function Prospects() {
 
       <ul className="tal-list">
         {talent.map((t) => (
-          <li key={t.id}><TalentCard t={t} picked={picked.has(t.id)} onPick={(on) => toggle(t.id, on)} onAction={(kind) => setAction({ kind, ids: [t.id] })} /></li>
+          <li key={t.id}><TalentCard t={t} picked={picked.has(t.id)} onPick={(on) => toggle(t.id, on)} onOpen={() => view(t.id)} onAction={(kind) => setAction({ kind, ids: [t.id] })} /></li>
         ))}
       </ul>
 
+      {viewing && <ProfileSheet t={viewing} said={said} onClose={() => view(null)} onAction={(kind) => setAction({ kind, ids: [viewing.id] })} />}
       {action?.kind === 'messages' && <MessagesDialog t={talent.find((x) => x.id === action.ids[0])!} onClose={() => setAction(null)} />}
       {(action?.kind === 'add' || action?.kind === 'invite') && (
         <JobDialog kind={action.kind} people={talent.filter((t) => action.ids.includes(t.id))} onClose={() => setAction(null)} onDone={(m) => { setAction(null); setSaid(m); }} />
@@ -95,13 +101,15 @@ function Prospects() {
 
 /* ---------- The card ---------- */
 
-function TalentCard({ t, picked, onPick, onAction }: { t: Talent; picked: boolean; onPick: (on: boolean) => void; onAction: (k: 'messages' | 'add' | 'invite' | 'oa') => void }) {
+function TalentCard({ t, picked, onPick, onOpen, onAction }: { t: Talent; picked: boolean; onPick: (on: boolean) => void; onOpen: () => void; onAction: (k: 'messages' | 'add' | 'invite' | 'oa') => void }) {
   const id = useId();
   const recent = t.applications.slice(0, 3);
   const oa = t.oa[0];
   const unread = t.messages.filter((m) => m.from === 'candidate').length;
   return (
-    <article className={`tal-card${picked ? ' is-picked' : ''}`} aria-labelledby={`${id}-n`}>
+    <article className={`tal-card is-openable${picked ? ' is-picked' : ''}`} aria-labelledby={`${id}-n`}
+      // Mouse shortcut: a click anywhere that isn't a control opens the profile. Keyboard uses the name button.
+      onClick={(e) => { if (!(e.target as HTMLElement).closest('a, button, input, label, [role="menu"]') && !getSelection()?.toString()) onOpen(); }}>
       <header className="tal-card__head">
         <label className="tal-card__pick">
           <input type="checkbox" checked={picked} onChange={(e) => onPick(e.target.checked)} />
@@ -109,7 +117,10 @@ function TalentCard({ t, picked, onPick, onAction }: { t: Talent; picked: boolea
         </label>
         <span className="tal-avatar" aria-hidden="true">{initials(t.name)}</span>
         <div className="tal-card__who">
-          <h2 id={`${id}-n`} className="tal-card__name">{t.name} {t.pronouns && <span className="tal-card__pron">({t.pronouns})</span>}</h2>
+          <h2 id={`${id}-n`} className="tal-card__name">
+            <button type="button" className="tal-card__open" onClick={onOpen}>{t.name}<span className="visually-hidden">, open full profile</span></button>
+            {' '}{t.pronouns && <span className="tal-card__pron">({t.pronouns})</span>}
+          </h2>
           <p className="tal-card__headline">{t.headline}</p>
           <ul className="tal-card__meta">
             <li><span className="mono">{t.id}</span></li>
