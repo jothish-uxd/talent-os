@@ -359,3 +359,19 @@
   .sheet__side { display: contents; }
   .sheet__who .sheet__toolbar { grid-column: 1 / -1; justify-content: flex-start; flex-wrap: wrap; padding: 4px 0 12px; }
 }
+/* Source gets more room; Last activity sits at the right edge, only as wide as it needs. */
+.sheet__facts { grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(0, 1.6fr) auto; }
+.sheet__facts > div:last-child { justify-self: end; text-align: right; }
+@media (max-width: 960px) {
+  .sheet__facts { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .sheet__facts > div:last-child { justify-self: start; text-align: left; }
+}
+/* Each fact takes its natural width; the spare room goes between them, so nothing wraps
+   and Last activity lands on the right edge. Narrow screens wrap whole facts, not words. */
+.sheet__facts { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px 32px; }
+.sheet__facts > div { white-space: nowrap; }
+.sheet__facts > div:last-child { text-align: right; }
+@media (max-width: 960px) {
+  .sheet__facts { display: flex; justify-content: flex-start; gap: 10px 28px; }
+  .sheet__facts > div:last-child { text-align: left; }
+}
