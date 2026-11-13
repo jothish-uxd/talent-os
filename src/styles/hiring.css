@@ -301,3 +301,45 @@
 .sheet__step:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 .sheet__step[aria-disabled="true"] { color: var(--ink-faint); background: var(--bg); cursor: not-allowed; }
 @media (max-width: 720px) { .sheet__count { min-width: 44px; font-size: 12px; } .sheet__step { width: 30px; height: 30px; } }
+
+/* ---------- Drawer layout v2: wider, pager top right, actions row, side nav ---------- */
+.sheet { width: min(1160px, calc(100% - 56px)); }
+.sheet__top { display: flex; align-items: center; gap: 12px; }
+.sheet__top .sheet__pager { padding: 0; }
+.sheet__top .sheet__close { margin-left: 0; }
+.sheet__toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 14px; padding: 12px 0 14px; border-top: 1px dashed var(--rule); }
+.sheet__head { padding-bottom: 0; }
+
+.sheet__main { flex: 1; min-height: 0; display: grid; grid-template-columns: 200px minmax(0, 1fr); }
+.sheet__nav--side { display: flex; flex-direction: column; gap: 2px; margin: 0; padding: 20px 12px 20px 20px; border-right: 1px solid var(--rule); overflow-y: auto; }
+.sheet__nav--side .sheet__tab { justify-content: space-between; width: 100%; height: 38px; padding: 0 12px; border-radius: 8px; text-align: left; }
+.sheet__nav--side .sheet__tab:hover { background: var(--bg-hover); }
+.sheet__nav--side .sheet__tab[aria-current="true"] { background: var(--bg-subtle); }
+.sheet__nav--side .sheet__tab[aria-current="true"]::after { left: 0; right: auto; top: 8px; bottom: 8px; width: 2px; height: auto; border-radius: 2px; }
+.sheet__main .sheet__body { padding: 8px 36px 56px; }
+
+@media (max-width: 960px) {
+  .sheet { width: 100%; }
+}
+@media (max-width: 720px) {
+  .sheet__main { display: flex; flex-direction: column; }
+  .sheet__nav--side { flex: none; flex-direction: row; gap: 2px; padding: 0 12px; border-right: 0; border-bottom: 1px solid var(--rule); overflow-x: auto; overflow-y: hidden; }
+  .sheet__nav--side .sheet__tab { width: auto; flex: none; height: 40px; border-radius: 0; background: none !important; }
+  .sheet__nav--side .sheet__tab[aria-current="true"]::after { left: 8px; right: 8px; top: auto; bottom: -1px; width: auto; height: 2px; }
+  .sheet__main .sheet__body { padding: 4px 16px 40px; }
+  .sheet__who { grid-template-columns: auto minmax(0, 1fr) auto; }
+  .sheet__top { gap: 4px; }
+  .sheet__top .sheet__close { position: static; }
+  .sheet__toolbar { margin-top: 10px; padding: 10px 0 12px; }
+}
+@media (max-width: 480px) {
+  .sheet__who { grid-template-columns: minmax(0, 1fr) auto; }
+  .sheet__who > .tal-avatar { display: none; }
+}
+.sheet__name { width: fit-content; }
+@media (max-width: 720px) {
+  /* Keep the pinned header short on phones; these details are also in Overview. */
+  .sheet__head .tal-card__meta, .sheet__head .sheet__facts { display: none; }
+  .sheet__head .tal-card__headline { margin-bottom: 0; }
+  .sheet__toolbar { border-top: 0; padding-top: 4px; }
+}

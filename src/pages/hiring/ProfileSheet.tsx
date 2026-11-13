@@ -126,18 +126,18 @@ export default function ProfileSheet({ t, said, pager, onClose, onAction }: { t:
                 <li>Prefers {t.preferredContact.toLowerCase()}</li>
               </ul>
             </div>
-            <div className="sheet__actions">
-              <button type="button" className="btn btn--secondary btn--sm" onClick={() => onAction('oa')}>Send OA</button>
-              <button type="button" className="btn btn--primary btn--sm" onClick={() => onAction('invite')}>Invite to apply</button>
-              <Menu label={`More actions for ${t.name}`} className="wf-more" items={[
-                { label: 'Add to job', onSelect: () => onAction('add') },
-                { label: 'Add a note', disabled: true, onSelect: () => {} },
-                { label: 'Add to talent pool', disabled: true, onSelect: () => {} },
-                { label: 'Share profile', disabled: true, onSelect: () => {} },
-                { label: 'Mark as do not contact', divider: true, disabled: true, onSelect: () => {} },
-              ]}>
-                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="12" r="1.6" /><circle cx="12" cy="12" r="1.6" /><circle cx="18" cy="12" r="1.6" /></svg>
-              </Menu>
+            <div className="sheet__top">
+              <div className="sheet__pager" role="group" aria-label="Move between prospects">
+              <button type="button" className="sheet__step" aria-label={pager.prev ? `Previous prospect: ${pager.prev}` : 'Previous prospect'} aria-disabled={!pager.prev || undefined}
+                onClick={() => { if (pager.prev) { pager.onStep(pager.prev, 'prev'); setStepped(`${pager.prev}, ${pager.index - 1} of ${pager.total}`); } }}>
+                <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m10 3.5-4.5 4.5 4.5 4.5" /></svg>
+              </button>
+              <span className="sheet__count"><span className="visually-hidden">Prospect </span>{pager.index} of {pager.total}</span>
+              <button type="button" className="sheet__step" aria-label={pager.next ? `Next prospect: ${pager.next}` : 'Next prospect'} aria-disabled={!pager.next || undefined}
+                onClick={() => { if (pager.next) { pager.onStep(pager.next, 'next'); setStepped(`${pager.next}, ${pager.index + 1} of ${pager.total}`); } }}>
+                <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m6 3.5 4.5 4.5L6 12.5" /></svg>
+              </button>
+            </div>
               <button type="button" className="bframe__btn sheet__close" aria-label="Close profile" onClick={onClose}>
                 <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" /></svg>
               </button>
@@ -150,28 +150,29 @@ export default function ProfileSheet({ t, said, pager, onClose, onAction }: { t:
             <div><dt>Source</dt><dd>{t.source}</dd></div>
             <div><dt>Last activity</dt><dd>{day(t.lastActivity)}</dd></div>
           </dl>
-          <div className="sheet__navrow">
-            <nav className="sheet__nav" aria-label={`Sections of ${t.name}’s profile`}>
+          <div className="sheet__toolbar" role="group" aria-label={`Actions for ${t.name}`}>
+              <button type="button" className="btn btn--secondary btn--sm" onClick={() => onAction('oa')}>Send OA</button>
+              <button type="button" className="btn btn--primary btn--sm" onClick={() => onAction('invite')}>Invite to apply</button>
+              <Menu label={`More actions for ${t.name}`} className="wf-more" items={[
+                { label: 'Add to job', onSelect: () => onAction('add') },
+                { label: 'Add a note', disabled: true, onSelect: () => {} },
+                { label: 'Add to talent pool', disabled: true, onSelect: () => {} },
+                { label: 'Share profile', disabled: true, onSelect: () => {} },
+                { label: 'Mark as do not contact', divider: true, disabled: true, onSelect: () => {} },
+              ]}>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="12" r="1.6" /><circle cx="12" cy="12" r="1.6" /><circle cx="18" cy="12" r="1.6" /></svg>
+              </Menu>
+          </div>
+        </header>
+
+        <div className="sheet__main">
+          <nav className="sheet__nav sheet__nav--side" aria-label={`Sections of ${t.name}’s profile`}>
               {NAV.map((n) => (
                 <button key={n.s} type="button" className="sheet__tab" aria-current={active === n.s ? 'true' : undefined} onClick={() => go(n.s)}>
                   {n.label}{n.n !== undefined && <span className="sheet__tab-n">{n.n}</span>}
                 </button>
               ))}
             </nav>
-            <div className="sheet__pager" role="group" aria-label="Move between prospects">
-              <button type="button" className="sheet__step" aria-label={pager.prev ? `Previous prospect: ${pager.prev}` : 'Previous prospect'} aria-disabled={!pager.prev || undefined}
-                onClick={() => { if (pager.prev) { pager.onStep(pager.prev, 'prev'); setStepped(`${pager.prev}, ${pager.index - 1} of ${pager.total}`); } }}>
-                <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m10 3.5-4.5 4.5 4.5 4.5" /></svg>
-              </button>
-              <span className="sheet__count"><span className="visually-hidden">Prospect </span>{pager.index} of {pager.total}</span>
-              <button type="button" className="sheet__step" aria-label={pager.next ? `Next prospect: ${pager.next}` : 'Next prospect'} aria-disabled={!pager.next || undefined}
-                onClick={() => { if (pager.next) { pager.onStep(pager.next, 'next'); setStepped(`${pager.next}, ${pager.index + 1} of ${pager.total}`); } }}>
-                <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m6 3.5 4.5 4.5L6 12.5" /></svg>
-              </button>
-            </div>
-          </div>
-        </header>
-
         <div ref={body} className="sheet__body">
           {/* ---------- Overview ---------- */}
           <section data-section="overview" aria-labelledby={`${id}-ov`} className="sheet__sec">
@@ -314,6 +315,7 @@ export default function ProfileSheet({ t, said, pager, onClose, onAction }: { t:
             )}
             <Compose t={t} />
           </section>
+        </div>
         </div>
         {/* The page behind is inert while the sheet is open, so confirmations are spoken and shown here. */}
         <span className="visually-hidden" role="status">{said || (stepped && `Now showing ${stepped}`)}</span>
