@@ -24,13 +24,16 @@ type ActionKind = 'add' | 'invite' | 'oa';
  * behind it inert, so keyboard and screen reader users stay in the sheet, while
  * the browser bar above it keeps working like a real browser's would.
  */
-export default function ProfileSheet({ t, said, onClose, onAction }: { t: Talent; said: string; onClose: () => void; onAction: (k: ActionKind) => void }) {
+interface Pager { index: number; total: number; prev?: string; next?: string; onStep: (name: string, dir: 'prev' | 'next') => void }
+
+export default function ProfileSheet({ t, said, pager, onClose, onAction }: { t: Talent; said: string; pager: Pager; onClose: () => void; onAction: (k: ActionKind) => void }) {
   const ref = useRef<HTMLDivElement>(null);
   const [host, setHost] = useState<HTMLElement | null>(null);
   const body = useRef<HTMLDivElement>(null);
   const opener = useRef<Element | null>(null);
   const id = useId();
   const [active, setActive] = useState<Section>('overview');
+  const hold = useRef(0);
   const resume = resumeFor(t);
   const interviews = interviewsFor(t);
   const open = t.applications.find((a) => !CLOSED.includes(a.stage) && a.stage !== 'Hired');
@@ -55,8 +58,21 @@ export default function ProfileSheet({ t, said, onClose, onAction }: { t: Talent
     };
   }, [host]);
 
-  // Start at the top whenever a different person opens.
-  useEffect(() => { body.current?.scrollTo({ top: 0 }); setActive('overview'); }, [t.id]);
+  // Stepping to another person keeps you in the same section (Interviews stays on Interviews).
+  // A short section can't scroll to the top, so the section you picked is held across steps
+  // rather than re-read from the scroll position.
+  const activeRef = useRef<Section>('overview');
+  activeRef.current = active;
+  const [stepped, setStepped] = useState('');
+  useEffect(() => {
+    const root = body.current;
+    if (!root) return;
+    const keep = activeRef.current;
+    const el = root.querySelector<HTMLElement>(`[data-section="${keep}"]`);
+    hold.current = Date.now() + 500;
+    root.scrollTo({ top: keep === 'overview' || !el ? 0 : el.offsetTop - 4 });
+    setActive(keep);
+  }, [t.id]);
 
   // Underline the section in view.
   useEffect(() => {
@@ -64,7 +80,8 @@ export default function ProfileSheet({ t, said, onClose, onAction }: { t: Talent
     if (!root) return;
     const io = new IntersectionObserver((entries) => {
       const seen = entries.filter((e) => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
-      if (seen) setActive(seen.target.getAttribute('data-section') as Section);
+      // Ignore the scroll we cause ourselves when stepping to another person.
+      if (seen && Date.now() > hold.current) setActive(seen.target.getAttribute('data-section') as Section);
     }, { root, rootMargin: '0px 0px -65% 0px' });
     root.querySelectorAll('[data-section]').forEach((s) => io.observe(s));
     return () => io.disconnect();
@@ -133,13 +150,26 @@ export default function ProfileSheet({ t, said, onClose, onAction }: { t: Talent
             <div><dt>Source</dt><dd>{t.source}</dd></div>
             <div><dt>Last activity</dt><dd>{day(t.lastActivity)}</dd></div>
           </dl>
-          <nav className="sheet__nav" aria-label={`Sections of ${t.name}’s profile`}>
-            {NAV.map((n) => (
-              <button key={n.s} type="button" className="sheet__tab" aria-current={active === n.s ? 'true' : undefined} onClick={() => go(n.s)}>
-                {n.label}{n.n !== undefined && <span className="sheet__tab-n">{n.n}</span>}
+          <div className="sheet__navrow">
+            <nav className="sheet__nav" aria-label={`Sections of ${t.name}’s profile`}>
+              {NAV.map((n) => (
+                <button key={n.s} type="button" className="sheet__tab" aria-current={active === n.s ? 'true' : undefined} onClick={() => go(n.s)}>
+                  {n.label}{n.n !== undefined && <span className="sheet__tab-n">{n.n}</span>}
+                </button>
+              ))}
+            </nav>
+            <div className="sheet__pager" role="group" aria-label="Move between prospects">
+              <button type="button" className="sheet__step" aria-label={pager.prev ? `Previous prospect: ${pager.prev}` : 'Previous prospect'} aria-disabled={!pager.prev || undefined}
+                onClick={() => { if (pager.prev) { pager.onStep(pager.prev, 'prev'); setStepped(`${pager.prev}, ${pager.index - 1} of ${pager.total}`); } }}>
+                <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m10 3.5-4.5 4.5 4.5 4.5" /></svg>
               </button>
-            ))}
-          </nav>
+              <span className="sheet__count"><span className="visually-hidden">Prospect </span>{pager.index} of {pager.total}</span>
+              <button type="button" className="sheet__step" aria-label={pager.next ? `Next prospect: ${pager.next}` : 'Next prospect'} aria-disabled={!pager.next || undefined}
+                onClick={() => { if (pager.next) { pager.onStep(pager.next, 'next'); setStepped(`${pager.next}, ${pager.index + 1} of ${pager.total}`); } }}>
+                <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m6 3.5 4.5 4.5L6 12.5" /></svg>
+              </button>
+            </div>
+          </div>
         </header>
 
         <div ref={body} className="sheet__body">
@@ -286,7 +316,7 @@ export default function ProfileSheet({ t, said, onClose, onAction }: { t: Talent
           </section>
         </div>
         {/* The page behind is inert while the sheet is open, so confirmations are spoken and shown here. */}
-        <span className="visually-hidden" role="status">{said}</span>
+        <span className="visually-hidden" role="status">{said || (stepped && `Now showing ${stepped}`)}</span>
         {said && <p className="tal-toast sheet__toast" aria-hidden="true">{said}</p>}
       </div>
       </div>

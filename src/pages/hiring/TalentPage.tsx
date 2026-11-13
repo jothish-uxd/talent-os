@@ -58,7 +58,13 @@ function Prospects() {
   // The open profile lives in the URL (?person=TAL-…), so it can be shared and Back closes it.
   const [params, setParams] = useSearchParams();
   const viewing = talent.find((t) => t.id === params.get('person'));
-  const view = (id: string | null) => setParams(id ? { person: id } : {}, { replace: !id });
+  const view = (id: string | null, step = false) => setParams(id ? { person: id } : {}, { replace: !id || step });
+  // Previous / next in the drawer follow the order of the list. Stepping replaces the URL, so Back still closes the drawer.
+  const at = viewing ? talent.indexOf(viewing) : -1;
+  const pager = {
+    index: at + 1, total: talent.length, prev: talent[at - 1]?.name, next: talent[at + 1]?.name,
+    onStep: (_: string, dir: 'prev' | 'next') => { const to = talent[at + (dir === 'next' ? 1 : -1)]; if (to) view(to.id, true); },
+  };
 
   return (
     <section className="tal-section" aria-labelledby="tal-pros-h">
@@ -87,7 +93,7 @@ function Prospects() {
         ))}
       </ul>
 
-      {viewing && <ProfileSheet t={viewing} said={said} onClose={() => view(null)} onAction={(kind) => setAction({ kind, ids: [viewing.id] })} />}
+      {viewing && <ProfileSheet t={viewing} said={said} pager={pager} onClose={() => view(null)} onAction={(kind) => setAction({ kind, ids: [viewing.id] })} />}
       {action?.kind === 'messages' && <MessagesDialog t={talent.find((x) => x.id === action.ids[0])!} onClose={() => setAction(null)} />}
       {(action?.kind === 'add' || action?.kind === 'invite') && (
         <JobDialog kind={action.kind} people={talent.filter((t) => action.ids.includes(t.id))} onClose={() => setAction(null)} onDone={(m) => { setAction(null); setSaid(m); }} />

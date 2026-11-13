@@ -289,3 +289,15 @@
 .sheet__name:focus { outline: none; }
 .sheet__name:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; border-radius: 3px; }
 .sheet__body { position: relative; }
+
+/* Previous / next prospect, at the end of the drawer's tab row */
+.sheet__navrow { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
+.sheet__navrow .sheet__nav { flex: 1; min-width: 0; margin-top: 0; }
+.sheet__pager { flex: none; display: flex; align-items: center; gap: 2px; padding-bottom: 2px; }
+.sheet__count { min-width: 56px; text-align: center; font-size: 13px; color: var(--ink-soft); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.sheet__step { display: inline-grid; place-items: center; width: 32px; height: 32px; border: 1px solid var(--rule); border-radius: 8px; background: var(--bg); color: var(--ink); cursor: pointer; }
+.sheet__step svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.sheet__step:hover { background: var(--bg-hover); }
+.sheet__step:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.sheet__step[aria-disabled="true"] { color: var(--ink-faint); background: var(--bg); cursor: not-allowed; }
+@media (max-width: 720px) { .sheet__count { min-width: 44px; font-size: 12px; } .sheet__step { width: 30px; height: 30px; } }
