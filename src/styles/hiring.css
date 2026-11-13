@@ -375,3 +375,5 @@
   .sheet__facts { display: flex; justify-content: flex-start; gap: 10px 28px; }
   .sheet__facts > div:last-child { text-align: left; }
 }
+/* Last activity stays at the right edge but reads left-aligned, like the other facts. */
+.sheet__facts > div:last-child { text-align: left; }
