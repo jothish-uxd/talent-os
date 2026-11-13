@@ -185,3 +185,4 @@
 .pd-mark .fill { fill: var(--ink); }
 .pd-mark .knock { stroke: var(--bg); stroke-width: 1.7; }
 .pd-touch { min-width: 200px; }
+.tal-none { margin: 0; font-size: 13.5px; color: var(--ink-faint); }

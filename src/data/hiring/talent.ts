@@ -1,9 +1,10 @@
 import { peek, put, useStored } from '../store';
+import { PROSPECTS } from './prospects';
 
 /*
   Talent: people in the ATS a recruiter might reach out to, whether or not
-  they've applied yet. One sample profile for now, built to show what a
-  recruiter needs at a glance.
+  they've applied yet. Wedge is the fully worked example; the other 24 are
+  in prospects.ts. Listed with the most recent activity first.
 */
 
 export type AppStage = 'Applied' | 'Screening' | 'Assessment' | 'Interviewing' | 'Offer' | 'Hired' | 'Not selected' | 'Withdrew' | 'Added by recruiter' | 'Invited to apply';
@@ -102,9 +103,11 @@ const WEDGE: Talent = {
   ],
 };
 
-const KEY = 'hiring:v1:talent';
-export const useTalent = () => useStored<Talent[]>(KEY, () => [WEDGE])[0];
-const all = () => peek<Talent[]>(KEY) ?? [WEDGE];
+const SEED = [WEDGE, ...PROSPECTS].sort((a, b) => b.lastActivity.localeCompare(a.lastActivity));
+// v2: the list grew from 1 to 25 people, so older saved copies are set aside.
+const KEY = 'hiring:v2:talent';
+export const useTalent = () => useStored<Talent[]>(KEY, () => SEED)[0];
+const all = () => peek<Talent[]>(KEY) ?? SEED;
 const patch = (id: string, fn: (t: Talent) => Talent) => put(KEY, all().map((t) => (t.id === id ? fn(t) : t)));
 const today = () => new Date().toISOString().slice(0, 10);
 

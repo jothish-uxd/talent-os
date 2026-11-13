@@ -158,6 +158,7 @@ function TalentCard({ t, picked, onPick, onAction }: { t: Talent; picked: boolea
       <div className="tal-cols">
         <section aria-labelledby={`${id}-apps`}>
           <h3 id={`${id}-apps`} className="tal-label">Recent applications</h3>
+          {recent.length === 0 && <p className="tal-none">None yet</p>}
           <ol className="tal-items">
             {recent.map((a) => (
               <li key={a.reqId}>
@@ -183,6 +184,7 @@ function TalentCard({ t, picked, onPick, onAction }: { t: Talent; picked: boolea
         </section>
         <section aria-labelledby={`${id}-edu`}>
           <h3 id={`${id}-edu`} className="tal-label">Education</h3>
+          {t.education.length === 0 && <p className="tal-none">None listed</p>}
           <ol className="tal-items">
             {t.education.slice(0, 2).map((e) => (
               <li key={e.school}>
