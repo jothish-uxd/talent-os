@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { Navigate, NavLink, Route, Routes, useSearchParams } from 'react-router-dom';
 import Dialog from '../../components/content/Dialog';
 import Menu from '../../components/content/Menu';
@@ -44,37 +44,74 @@ export default function TalentPage() {
   );
 }
 
-/** Prospects: individual people, as cards you can select and act on. */
+const PAGE_SIZES = [10, 25, 50] as const;
+
+/**
+ * Prospects: individual people, as cards you can select and act on.
+ * Paged, 25 to a page by default. Everything works on the page you can see:
+ * Select all picks only this page, the profile drawer steps through only this
+ * page, and selections that end up off the page (after changing page or page
+ * size) are dropped, so an action never reaches people you can't see.
+ */
 function Prospects() {
   const talent = useTalent();
   const [picked, setPicked] = useState<Set<string>>(new Set());
   const [action, setAction] = useState<Action>(null);
   const [said, setSaid] = useState('');
-  const all = talent.length > 0 && picked.size === talent.length;
-  const some = picked.size > 0 && !all;
+  const [size, setSize] = useState<number>(25);
+  const [page, setPage] = useState(1);
+  const pages = Math.max(1, Math.ceil(talent.length / size));
+  const from = (page - 1) * size;
+  const shown = talent.slice(from, from + size);
+  const onPage = new Set(shown.map((t) => t.id));
+  const pickedHere = shown.filter((t) => picked.has(t.id)).length;
+  const all = shown.length > 0 && pickedHere === shown.length;
+  const some = pickedHere > 0 && !all;
   const ids = [...picked];
+  const top = useRef<HTMLHeadingElement>(null);
   useEffect(() => { if (!said) return; const t = setTimeout(() => setSaid(''), 5000); return () => clearTimeout(t); }, [said]);
   const toggle = (id: string, on: boolean) => setPicked((p) => { const n = new Set(p); if (on) n.add(id); else n.delete(id); return n; });
+
+  /** Move to a page (and size), keeping only selections that are still in view. */
+  const show = (nextPage: number, nextSize = size) => {
+    const start = (nextPage - 1) * nextSize;
+    const visible = new Set(talent.slice(start, start + nextSize).map((t) => t.id));
+    const kept = [...picked].filter((id) => visible.has(id));
+    const dropped = picked.size - kept.length;
+    setSize(nextSize);
+    setPage(nextPage);
+    setPicked(new Set(kept));
+    const range = `${start + 1}–${Math.min(start + nextSize, talent.length)} of ${talent.length}`;
+    setSaid(`Showing ${range}.` + (dropped ? ` ${dropped} ${dropped === 1 ? 'selection was' : 'selections were'} cleared because ${dropped === 1 ? 'that person is' : 'those people are'} no longer on this page.` : ''));
+    top.current?.closest('section')?.scrollIntoView({ block: 'start' });
+  };
+  // A new page size keeps the first person you were looking at in view.
+  const resize = (n: number) => show(Math.floor(from / n) + 1, n);
+
   // The open profile lives in the URL (?person=TAL-…), so it can be shared and Back closes it.
   const [params, setParams] = useSearchParams();
   const viewing = talent.find((t) => t.id === params.get('person'));
   const view = (id: string | null, step = false) => setParams(id ? { person: id } : {}, { replace: !id || step });
-  // Previous / next in the drawer follow the order of the list. Stepping replaces the URL, so Back still closes the drawer.
-  const at = viewing ? talent.indexOf(viewing) : -1;
+  // A link to someone on another page opens that page.
+  useEffect(() => {
+    if (viewing && !onPage.has(viewing.id)) setPage(Math.floor(talent.indexOf(viewing) / size) + 1);
+  }, [viewing?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Previous / next in the drawer step through this page only. Stepping replaces the URL, so Back still closes the drawer.
+  const at = viewing ? shown.indexOf(viewing) : -1;
   const pager = {
-    index: at + 1, total: talent.length, prev: talent[at - 1]?.name, next: talent[at + 1]?.name,
-    onStep: (_: string, dir: 'prev' | 'next') => { const to = talent[at + (dir === 'next' ? 1 : -1)]; if (to) view(to.id, true); },
+    index: at + 1, total: shown.length, prev: shown[at - 1]?.name, next: shown[at + 1]?.name,
+    onStep: (_: string, dir: 'prev' | 'next') => { const to = shown[at + (dir === 'next' ? 1 : -1)]; if (to) view(to.id, true); },
   };
 
   return (
     <section className="tal-section" aria-labelledby="tal-pros-h">
-      <h2 id="tal-pros-h" className="visually-hidden">Prospects</h2>
+      <h2 id="tal-pros-h" ref={top} className="visually-hidden">Prospects</h2>
       <p className="tal-intro">People you’ve sourced or who’ve shown interest. Open someone to see their full profile, or select people to act on several at once.</p>
       <div className="tal-bulk" role="toolbar" aria-label="Selected people">
         <label className="check">
           <input type="checkbox" checked={all} ref={(el) => { if (el) el.indeterminate = some; }}
-            onChange={(e) => setPicked(e.target.checked ? new Set(talent.map((t) => t.id)) : new Set())} />
-          Select all {talent.length}
+            onChange={(e) => setPicked((p) => { const n = new Set(p); shown.forEach((t) => (e.target.checked ? n.add(t.id) : n.delete(t.id))); return n; })} />
+          Select all {shown.length} on this page
         </label>
         <span className="tal-bulk__count" aria-live="polite">{picked.size ? `${picked.size} selected` : 'None selected'}</span>
         <span className="tal-bulk__actions">
@@ -88,12 +125,36 @@ function Prospects() {
       </div>
 
       <ul className="tal-list">
-        {talent.map((t) => (
+        {shown.map((t) => (
           <li key={t.id}><TalentCard t={t} picked={picked.has(t.id)} onPick={(on) => toggle(t.id, on)} onOpen={() => view(t.id)} onAction={(kind) => setAction({ kind, ids: [t.id] })} /></li>
         ))}
       </ul>
 
-      {viewing && <ProfileSheet t={viewing} said={said} pager={pager} onClose={() => view(null)} onAction={(kind) => setAction({ kind, ids: [viewing.id] })} />}
+      <div className="pg">
+        <label className="pg-size">
+          Show
+          <select value={size} onChange={(e) => resize(Number(e.target.value))}>
+            {PAGE_SIZES.map((n) => <option key={n} value={n}>{n}</option>)}
+          </select>
+          per page
+        </label>
+        <div className="pg-right">
+          <span className="pg-range">{from + 1}–{from + shown.length} of {talent.length}</span>
+          <nav className="pg-pages" aria-label="Pages of prospects">
+            <button type="button" className="pg-btn pg-btn--step" aria-disabled={page === 1 || undefined} onClick={() => page > 1 && show(page - 1)}>
+              <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m10 3.5-4.5 4.5 4.5 4.5" /></svg>Previous
+            </button>
+            {Array.from({ length: pages }, (_, i) => i + 1).map((n) => (
+              <button key={n} type="button" className="pg-btn" aria-current={n === page ? 'page' : undefined} aria-label={`Page ${n}`} onClick={() => n !== page && show(n)}>{n}</button>
+            ))}
+            <button type="button" className="pg-btn pg-btn--step" aria-disabled={page === pages || undefined} onClick={() => page < pages && show(page + 1)}>
+              Next<svg viewBox="0 0 16 16" aria-hidden="true"><path d="m6 3.5 4.5 4.5L6 12.5" /></svg>
+            </button>
+          </nav>
+        </div>
+      </div>
+
+      {viewing && onPage.has(viewing.id) && <ProfileSheet t={viewing} said={said} pager={pager} onClose={() => view(null)} onAction={(kind) => setAction({ kind, ids: [viewing.id] })} />}
       {action?.kind === 'messages' && <MessagesDialog t={talent.find((x) => x.id === action.ids[0])!} onClose={() => setAction(null)} />}
       {(action?.kind === 'add' || action?.kind === 'invite') && (
         <JobDialog kind={action.kind} people={talent.filter((t) => action.ids.includes(t.id))} onClose={() => setAction(null)} onDone={(m) => { setAction(null); setSaid(m); }} />

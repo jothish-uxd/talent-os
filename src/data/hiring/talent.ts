@@ -1,10 +1,11 @@
 import { peek, put, useStored } from '../store';
 import { PROSPECTS } from './prospects';
+import { MORE_PROSPECTS } from './moreProspects';
 
 /*
   Talent: people in the ATS a recruiter might reach out to, whether or not
-  they've applied yet. Wedge is the fully worked example; the other 24 are
-  in prospects.ts. Listed with the most recent activity first.
+  they've applied yet. Wedge is the fully worked example; 24 more are in
+  prospects.ts and another 40 in moreProspects.ts. Listed with the most recent activity first.
 */
 
 export type AppStage = 'Applied' | 'Screening' | 'Assessment' | 'Interviewing' | 'Offer' | 'Hired' | 'Not selected' | 'Withdrew' | 'Added by recruiter' | 'Invited to apply';
@@ -103,9 +104,9 @@ const WEDGE: Talent = {
   ],
 };
 
-const SEED = [WEDGE, ...PROSPECTS].sort((a, b) => b.lastActivity.localeCompare(a.lastActivity));
-// v2: the list grew from 1 to 25 people, so older saved copies are set aside.
-const KEY = 'hiring:v2:talent';
+const SEED = [WEDGE, ...PROSPECTS, ...MORE_PROSPECTS].sort((a, b) => b.lastActivity.localeCompare(a.lastActivity));
+// v3: the list grew to 65 people, so older saved copies are set aside.
+const KEY = 'hiring:v3:talent';
 export const useTalent = () => useStored<Talent[]>(KEY, () => SEED)[0];
 const all = () => peek<Talent[]>(KEY) ?? SEED;
 const patch = (id: string, fn: (t: Talent) => Talent) => put(KEY, all().map((t) => (t.id === id ? fn(t) : t)));

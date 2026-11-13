@@ -377,3 +377,24 @@
 }
 /* Last activity stays at the right edge but reads left-aligned, like the other facts. */
 .sheet__facts > div:last-child { text-align: left; }
+
+/* ---------- Prospects pagination ---------- */
+.pg { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; margin-top: 20px; padding: 14px 0 4px; border-top: 1px solid var(--rule); }
+.pg-size { display: inline-flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--ink-soft); }
+.pg-size select { height: 32px; padding: 0 28px 0 10px; border: 1px solid var(--rule-strong); border-radius: 8px; background: var(--bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='m4 6 4 4 4-4' fill='none' stroke='%23555' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 8px center / 14px; color: var(--ink); font: inherit; font-size: 13.5px; appearance: none; cursor: pointer; }
+.pg-size select:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.pg-right { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin-left: auto; }
+.pg-range { font-size: 13.5px; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+.pg-pages { display: flex; align-items: center; gap: 4px; }
+.pg-btn { display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-width: 32px; height: 32px; padding: 0 8px; border: 1px solid transparent; border-radius: 8px; background: none; color: var(--ink); font: inherit; font-size: 13.5px; font-variant-numeric: tabular-nums; cursor: pointer; }
+.pg-btn:hover { background: var(--bg-hover); }
+.pg-btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.pg-btn[aria-current="page"] { border-color: var(--ink); font-weight: 650; }
+.pg-btn--step { padding: 0 10px; border-color: var(--rule); }
+.pg-btn--step svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.pg-btn[aria-disabled="true"] { color: var(--ink-faint); background: none; cursor: not-allowed; }
+@media (max-width: 560px) {
+  .pg-right { margin-left: 0; width: 100%; justify-content: space-between; }
+  .pg-btn--step { font-size: 0; gap: 0; }
+  .pg-btn--step svg { width: 16px; height: 16px; }
+}
