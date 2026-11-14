@@ -1,8 +1,11 @@
-import { useState } from 'react';
-import { Link, Navigate, Route, Routes, useParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, Navigate, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { usePageTitle } from '../../components/usePageTitle';
 import { StatFilter } from '@jothish-uxd/enterprise-library';
-import { JOBS, STAGES, inPipeline, jobById, type Job } from '../../data/hiring/jobs';
+import { STAGES, inPipeline, type Job } from '../../data/hiring/jobs';
+import { decide, deleteDraft, isCreated, useAllJobs, who, LOCATIONS, type CreatedJob } from '../../data/hiring/newJob';
+import { person, useMe } from '../../data/hiring/people';
+import NewJob from './NewJob';
 import { candidatesFor, type JobCandidate } from '../../data/hiring/applicants';
 import { STATUS_TEXT, sessionById } from '../../data/proctor/sessions';
 import { RiskBadge, sessionPath } from '../proctor/bits';
@@ -17,6 +20,7 @@ export default function JobsPage() {
   return (
     <Routes>
       <Route index element={<JobsList />} />
+      <Route path="new" element={<NewJob />} />
       <Route path=":reqId" element={<JobRoute />} />
       <Route path="*" element={<Navigate to={BASE} replace />} />
     </Routes>
@@ -25,8 +29,17 @@ export default function JobsPage() {
 
 function JobRoute() {
   const { reqId } = useParams();
-  const j = jobById(reqId);
-  return j ? <JobDetail j={j} /> : <Navigate to={BASE} replace />;
+  const j = useAllJobs().find((x) => x.reqId === reqId);
+  if (!j) return <Navigate to={BASE} replace />;
+  return isCreated(j) && j.status !== 'Open' ? <NewJobDetail j={j} /> : <JobDetail j={j} />;
+}
+
+/** A short confirmation passed along when navigating here (e.g. after saving or submitting a job). */
+function useArrivalNote() {
+  const loc = useLocation();
+  const [said, setSaid] = useState<string>((loc.state as { said?: string } | null)?.said ?? '');
+  useEffect(() => { if (!said) return; const t = setTimeout(() => setSaid(''), 6000); return () => clearTimeout(t); }, [said]);
+  return [said, setSaid] as const;
 }
 
 /** Status shown with a mark as well as words. */
@@ -36,7 +49,10 @@ function JobStatus({ s }: { s: Job['status'] }) {
 
 function JobsList() {
   const h = usePageTitle('Jobs · Internal ATS');
+  const JOBS = useAllJobs();
   const open = JOBS.filter((j) => j.status === 'Open');
+  const waiting = JOBS.filter((j) => j.status === 'Pending approval').length;
+  const [said] = useArrivalNote();
   return (
     <div className="ca-page">
       <header className="ca-head">
@@ -44,13 +60,17 @@ function JobsList() {
           <h1 ref={h} tabIndex={-1} className="ca-title">Jobs</h1>
           <p className="ca-sub">Requisitions and where their candidates are in the pipeline. Choose a job to see it in detail.</p>
         </div>
+        <Link to={`${BASE}/new`} className="btn btn--primary">Create job</Link>
       </header>
       <dl className="pr-stats job-stats">
         <div><dt>Open jobs</dt><dd>{open.length}</dd></div>
         <div><dt>Openings to fill</dt><dd>{open.reduce((s, j) => s + j.openings - j.pipeline.Hired, 0)}</dd></div>
         <div><dt>In pipelines</dt><dd>{open.reduce((s, j) => s + inPipeline(j), 0)}</dd></div>
         <div><dt>Offers out</dt><dd>{open.reduce((s, j) => s + j.pipeline.Offer, 0)}</dd></div>
+        <div><dt>Waiting for approval</dt><dd>{waiting}</dd></div>
       </dl>
+      <span className="visually-hidden" role="status">{said}</span>
+      {said && <p className="tal-toast" aria-hidden="true">{said}</p>}
       <div className="table-wrap">
         <table className="table job-table">
           <caption className="visually-hidden">Jobs, with the number of candidates at each pipeline stage</caption>
@@ -70,7 +90,7 @@ function JobsList() {
                   <Link to={`${BASE}/${j.reqId}`} className="row-link">{j.title}</Link>
                   <span className="cell-sub"><span className="mono">{j.reqId}</span> · {j.location}</span>
                 </th>
-                <td><JobStatus s={j.status} />{j.closes && j.status === 'Open' && <span className="cell-sub">Closes {day(j.closes)}</span>}</td>
+                <td><JobStatus s={j.status} />{j.closes && j.status === 'Open' && <span className="cell-sub">Closes {day(j.closes)}</span>}{isCreated(j) && j.status === 'Pending approval' && <span className="cell-sub">{waitingOn(j)}</span>}</td>
                 <td>{j.recruiter}<span className="cell-sub">HM {j.hiringManager}</span></td>
                 {STAGES.map((s) => <td key={s} className="num">{j.pipeline[s] || <span className="muted">0</span>}</td>)}
                 <td><Funnel j={j} /></td>
@@ -81,6 +101,13 @@ function JobsList() {
       </div>
     </div>
   );
+}
+
+/** Who a pending job is waiting on, in a few words. */
+function waitingOn(j: CreatedJob) {
+  const w = j.approvals?.steps.filter((s) => s.status === 'Waiting') ?? [];
+  const done = j.approvals?.steps.filter((s) => s.status === 'Approved').length ?? 0;
+  return w.length === 1 ? `Waiting on ${w[0].name}` : `${done} of ${j.approvals?.steps.length} approved`;
 }
 
 /** Tiny funnel: one bar per stage, scaled to the job's applicants. Decorative; the numbers are in the table. */
@@ -222,5 +249,140 @@ function CandidateRow({ c, j }: { c: JobCandidate; j: Job }) {
         )}
       </td>
     </tr>
+  );
+}
+
+/* ---------- A job made with Create job, before it's open ---------- */
+
+const MARK: Record<string, JSX.Element> = {
+  Approved: <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.5" className="fill" /><path d="m5 8.3 2 2 4-4.6" className="knock" /></svg>,
+  Waiting: <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" /><path d="M8 4.8V8l2.2 1.4" /></svg>,
+  'Not started': <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" strokeDasharray="2.4 2.2" /></svg>,
+  'Sent back': <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" /><path d="M10.5 5.5h-4a2 2 0 0 0 0 4H9M6.5 7.5 5 9.5l1.5 2" /></svg>,
+};
+
+function NewJobDetail({ j }: { j: CreatedJob }) {
+  const h = usePageTitle(`${j.title} · Internal ATS`);
+  const me = person(useMe());
+  const nav = useNavigate();
+  const [said, setSaid] = useArrivalNote();
+  const [note, setNote] = useState('');
+  const f = j.form;
+  const steps = j.approvals?.steps ?? [];
+  const mine = steps.find((s) => s.name === me.name && s.status === 'Waiting');
+  const nextUp = steps.find((s) => s.status === 'Waiting' && s.name !== me.name);
+  const sentBack = steps.find((s) => s.status === 'Sent back');
+  const act = (name: string, d: 'Approved' | 'Sent back', n = '') => {
+    decide(j.reqId, name, d, n);
+    setNote('');
+    setSaid(d === 'Approved' ? `${name} approved ${j.title}.` : `${name} sent ${j.title} back to ${j.form.recruiter}.`);
+  };
+  const lines = (s: string) => s.split('\n').map((x) => x.trim()).filter(Boolean);
+
+  return (
+    <div className="ca-page">
+      <nav className="breadcrumbs" aria-label="Breadcrumb">
+        <ol>
+          <li><Link to={BASE}>Jobs</Link></li>
+          <li><span aria-current="page">{j.title}</span></li>
+        </ol>
+      </nav>
+      <header className="ca-head">
+        <div>
+          <p className="page-kicker"><span className="mono">{j.reqId}</span> · {j.team}</p>
+          <h1 ref={h} tabIndex={-1} className="ca-title">{j.title}</h1>
+          <p className="ca-sub">{j.location} · {j.openings} opening{j.openings === 1 ? '' : 's'} · {f.employment}</p>
+        </div>
+        <div className="njd-head-end">
+          <JobStatus s={j.status} />
+          {j.status === 'Draft' && <>
+            <button type="button" className="btn btn--ghost btn--sm" onClick={() => { deleteDraft(j.reqId); nav(BASE, { state: { said: `Deleted the draft ${j.title}.` } }); }}>Delete draft</button>
+            <Link to={`${BASE}/new?draft=${j.reqId}`} className="btn btn--primary btn--sm">{sentBack ? 'Make changes' : 'Continue editing'}</Link>
+          </>}
+        </div>
+      </header>
+
+      {j.status === 'Pending approval' && <p className="njd-banner" role="note">This job isn’t posted yet. It opens to candidates once everyone below has approved.</p>}
+      {j.status === 'Draft' && !sentBack && <p className="njd-banner" role="note">Draft. Only you can see it until you send it for approval.</p>}
+      {sentBack && <p className="njd-banner njd-banner--strong" role="note"><strong>{sentBack.name} sent this back.</strong> {sentBack.note ?? 'No note left.'} Make changes and send it again.</p>}
+
+      <div className="job-grid njd-grid">
+        <div className="njd-main">
+          <section className="njd-sec" aria-labelledby="njd-about">
+            <h2 id="njd-about" className="detail__h3">About the job</h2>
+            <p>{f.summary || <span className="muted">No summary yet.</span>}</p>
+            {lines(f.responsibilities).length > 0 && <><h3 className="njd-h4">What they’ll do</h3><ul>{lines(f.responsibilities).map((l) => <li key={l}>{l}</li>)}</ul></>}
+            {lines(f.requirements).length > 0 && <><h3 className="njd-h4">What they need</h3><ul>{lines(f.requirements).map((l) => <li key={l}>{l}</li>)}</ul></>}
+          </section>
+          <section className="njd-sec" aria-labelledby="njd-where">
+            <h2 id="njd-where" className="detail__h3">Where and pay</h2>
+            <dl className="nj-dl">
+              <div><dt>Arrangement</dt><dd>{f.arrangement}{f.arrangement === 'Hybrid' ? `, ${f.daysOnSite} days on site` : ''}</dd></div>
+              {f.arrangement === 'Remote'
+                ? <><div><dt>Regions</dt><dd>{f.regions.join(', ') || '—'}</dd></div><div><dt>Overlap</dt><dd>{f.overlap}</dd></div></>
+                : <><div className="nj-dl__wide"><dt>Locations</dt><dd>{f.locations.map((id) => LOCATIONS.find((l) => l.id === id)?.name).join(', ') || '—'}</dd></div><div><dt>Relocation</dt><dd>{f.relocation ? 'Offered' : 'Not offered'}</dd></div></>}
+              <div><dt>Travel</dt><dd>{f.travel}</dd></div>
+              <div><dt>Pay</dt><dd>{f.payMin && f.payMax ? `${Number(f.payMin).toLocaleString('en-US')}k–${Number(f.payMax).toLocaleString('en-US')}k credits a year` : '—'}</dd></div>
+            </dl>
+          </section>
+        </div>
+
+        <aside className="job-side" aria-label="About this job">
+          {j.approvals ? (
+            <section className="njd-approvals" aria-labelledby="njd-ap">
+              <h2 id="njd-ap" className="detail__h3">Approvals</h2>
+              <p className="nj-hint">{j.approvals.mode === 'In order' ? 'One after another' : 'All at once'} · sent by {j.approvals.submittedBy} on {day(j.approvals.submittedAt.slice(0, 10))}</p>
+              <ol className="njd-steps">
+                {steps.map((s) => (
+                  <li key={s.name} className={`njd-step is-${s.status.toLowerCase().replace(' ', '-')}`}>
+                    <span className="njd-mark" aria-hidden="true">{MARK[s.status]}</span>
+                    <span className="njd-who"><strong>{s.name}</strong><span className="cell-sub">{s.title || who(s.name).title}</span><span className="cell-sub">{s.why}</span></span>
+                    <span className="njd-state">{s.status}{s.at && <span className="cell-sub">{day(s.at.slice(0, 10))}</span>}</span>
+                    {s.note && <p className="njd-note">“{s.note}”</p>}
+                  </li>
+                ))}
+              </ol>
+
+              {mine && j.status === 'Pending approval' && (
+                <div className="njd-decide">
+                  <p className="njd-decide__h">You’re an approver, {me.name.split(' ')[0]}.</p>
+                  <div className="field">
+                    <label className="field__label" htmlFor="njd-note">Note <span className="field__opt">(optional, sent with your decision)</span></label>
+                    <textarea id="njd-note" rows={2} value={note} onChange={(e) => setNote(e.target.value)} />
+                  </div>
+                  <div className="form-actions">
+                    <button type="button" className="btn btn--primary btn--sm" onClick={() => act(me.name, 'Approved', note)}>Approve</button>
+                    <button type="button" className="btn btn--secondary btn--sm" onClick={() => act(me.name, 'Sent back', note)}>Send back</button>
+                  </div>
+                </div>
+              )}
+              {nextUp && j.status === 'Pending approval' && (
+                <div className="njd-proto">
+                  <p className="njd-proto__h">Prototype</p>
+                  <p>Approvals from people you can’t sign in as are simulated.</p>
+                  <button type="button" className="btn btn--secondary btn--sm" onClick={() => act(nextUp.name, 'Approved')}>Approve as {nextUp.name}</button>
+                </div>
+              )}
+            </section>
+          ) : (
+            <section className="njd-approvals" aria-labelledby="njd-ap">
+              <h2 id="njd-ap" className="detail__h3">Approvals</h2>
+              <p className="nj-hint">Not sent yet. These people will be asked:</p>
+              <ol className="nj-mini-chain">{f.chain.map((n) => <li key={n}><strong>{n}</strong> · {who(n).title}</li>)}</ol>
+            </section>
+          )}
+          <dl className="kv kv--stack">
+            <div><dt>Recruiter</dt><dd>{j.recruiter}</dd></div>
+            <div><dt>Hiring manager</dt><dd>{j.hiringManager}</dd></div>
+            <div><dt>Level</dt><dd>{j.level}</dd></div>
+            <div><dt>Reason</dt><dd>{f.reason}{f.reason === 'Backfill' && f.backfillFor ? ` for ${f.backfillFor}` : ''}</dd></div>
+            <div><dt>OA workflow</dt><dd>{j.workflow ?? <span className="muted">None</span>}</dd></div>
+            <div><dt>Created</dt><dd>{day(j.createdAt.slice(0, 10))} by {j.createdBy}</dd></div>
+          </dl>
+        </aside>
+      </div>
+      <span className="visually-hidden" role="status">{said}</span>
+      {said && <p className="tal-toast" aria-hidden="true">{said}</p>}
+    </div>
   );
 }

@@ -12,7 +12,7 @@ What Talent OS is, who uses it, and what's built so far.
 
 | Tab | What it is | Status |
 | --- | --- | --- |
-| Jobs | Requisitions and where their candidates are in the pipeline | Built |
+| Jobs | Requisitions and where their candidates are in the pipeline; create a job and send it for approval | Built |
 | Talent | Pools and prospects you might hire | Built |
 | Applicants | Everyone who has applied, by job and stage | Coming soon |
 | Interviews | Scheduled interviews, panels and feedback | Coming soon |

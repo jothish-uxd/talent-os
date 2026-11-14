@@ -17,7 +17,7 @@ export interface Job {
   hiringManager: string;
   opened: string;
   closes?: string;
-  status: 'Open' | 'On hold' | 'Filled' | 'Closed';
+  status: 'Open' | 'On hold' | 'Filled' | 'Closed' | 'Draft' | 'Pending approval';
   workflow?: string;
   pipeline: Record<Stage, number>;
 }
