@@ -58,20 +58,15 @@ export default function ProfileSheet({ t, said, pager, onClose, onAction }: { t:
     };
   }, [host]);
 
-  // Stepping to another person keeps you in the same section (Interviews stays on Interviews).
-  // A short section can't scroll to the top, so the section you picked is held across steps
-  // rather than re-read from the scroll position.
-  const activeRef = useRef<Section>('overview');
-  activeRef.current = active;
+  // Stepping to another person always starts at the top, on Overview, however far
+  // down the previous person you'd scrolled.
   const [stepped, setStepped] = useState('');
   useEffect(() => {
     const root = body.current;
     if (!root) return;
-    const keep = activeRef.current;
-    const el = root.querySelector<HTMLElement>(`[data-section="${keep}"]`);
-    hold.current = Date.now() + 500;
-    root.scrollTo({ top: keep === 'overview' || !el ? 0 : el.offsetTop - 4 });
-    setActive(keep);
+    hold.current = Date.now() + 300;
+    root.scrollTo({ top: 0 });
+    setActive('overview');
   }, [t.id]);
 
   // Highlight the section you're reading as you scroll: the last one whose top has
